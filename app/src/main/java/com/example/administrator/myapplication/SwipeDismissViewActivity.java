@@ -14,7 +14,7 @@ public class SwipeDismissViewActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_swipe_dismiss_view);
 
-        String[] items = new String[20];
+        String[] items = new String[10];
         for (int i = 0; i < items.length; i++) {
             items[i] = "Item " + (i + 1);
         }
@@ -35,20 +35,24 @@ public class SwipeDismissViewActivity extends AppCompatActivity {
                 }
             });
             // Create a generic swipe-to-dismiss touch listener.
-            dismissableButton.setOnTouchListener(new SwipeDismissTouchListener(
-                    dismissableButton,
-                    null,
-                    new SwipeDismissTouchListener.DismissCallbacks() {
-                        @Override
-                        public boolean canDismiss(Object token) {
-                            return true;
-                        }
+//            dismissableButton.setOnTouchListener(new SwipeDismissTouchListener(
+//                    dismissableButton,
+//                    null,
+//                    new SwipeDismissTouchListener.DismissCallbacks() {
+//                        @Override
+//                        public boolean canDismiss(Object token) {
+//                            return true;
+//                        }
+//
+//                        @Override
+//                        public void onDismiss(View view, Object token) {
+//                            dismissableContainer.removeView(dismissableButton);
+//                        }
+//                    }));
 
-                        @Override
-                        public void onDismiss(View view, Object token) {
-                            dismissableContainer.removeView(dismissableButton);
-                        }
-                    }));
+            dismissableButton.setOnTouchListener(new MySwipeDismissTouchListener(dismissableButton));
+
+
             dismissableContainer.addView(dismissableButton);
         }
     }
