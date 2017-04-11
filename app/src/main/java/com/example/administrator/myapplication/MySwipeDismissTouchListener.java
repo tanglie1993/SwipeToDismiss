@@ -81,9 +81,9 @@ public class MySwipeDismissTouchListener implements View.OnTouchListener {
     private void shrinkView() {
 
         final float initialHeight = view.getMeasuredHeight();
-        ValueAnimator mAnimator = ValueAnimator.ofFloat(1, 0);
+        ValueAnimator animator = ValueAnimator.ofFloat(1, 0);
         //2.为目标对象的属性变化设置监听器
-        mAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
                 // TODO Auto-generated method stub
@@ -94,39 +94,32 @@ public class MySwipeDismissTouchListener implements View.OnTouchListener {
             }
         });
         //4.为ValueAnimator设置LinearInterpolator
-        mAnimator.setInterpolator(new LinearInterpolator());
+        animator.setInterpolator(new LinearInterpolator());
         //5.设置动画的持续时间
-        mAnimator.setDuration(3000);
+        animator.setDuration(3000);
         //6.为ValueAnimator设置目标对象并开始执行动画
-        mAnimator.setTarget(view);
-        mAnimator.start();
+        animator.setTarget(view);
+        animator.addListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animation) {
 
+            }
 
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                callback.onViewRemoved();
+            }
 
-//        ObjectAnimator animator = ObjectAnimator.ofFloat(view, "scaleY", 1f,0f);
-//        animator.setDuration(5000);
-//        animator.setInterpolator(new LinearInterpolator());
-//        animator.addListener(new Animator.AnimatorListener() {
-//            @Override
-//            public void onAnimationStart(Animator animation) {
-//
-//            }
-//
-//            @Override
-//            public void onAnimationEnd(Animator animation) {
-//                callback.onViewRemoved();
-//            }
-//
-//            @Override
-//            public void onAnimationCancel(Animator animation) {
-//
-//            }
-//
-//            @Override
-//            public void onAnimationRepeat(Animator animation) {
-//
-//            }
-//        });
-//        animator.start();
+            @Override
+            public void onAnimationCancel(Animator animation) {
+
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animation) {
+
+            }
+        });
+        animator.start();
     }
 }
