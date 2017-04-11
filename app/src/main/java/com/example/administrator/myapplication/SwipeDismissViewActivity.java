@@ -50,7 +50,13 @@ public class SwipeDismissViewActivity extends AppCompatActivity {
 //                        }
 //                    }));
 
-            dismissableButton.setOnTouchListener(new MySwipeDismissTouchListener(dismissableButton));
+            dismissableButton.setOnTouchListener(new MySwipeDismissTouchListener(dismissableButton
+                    , new MySwipeDismissTouchListener.ViewRemoveListener() {
+                @Override
+                public void onViewRemoved() {
+                    dismissableContainer.removeView(dismissableButton);
+                }
+            }));
 
 
             dismissableContainer.addView(dismissableButton);
