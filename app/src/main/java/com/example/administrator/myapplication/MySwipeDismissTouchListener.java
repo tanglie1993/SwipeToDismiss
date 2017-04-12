@@ -30,6 +30,8 @@ public class MySwipeDismissTouchListener implements View.OnTouchListener {
 
     private VelocityTracker velocityTracker = VelocityTracker.obtain();
 
+    private final int ANIMATION_DURATION = 200;
+
     public MySwipeDismissTouchListener(View view, ViewRemoveListener callback) {
         this.view = view;
         this.callback = callback;
@@ -38,12 +40,9 @@ public class MySwipeDismissTouchListener implements View.OnTouchListener {
     @Override
     public boolean onTouch(View v, MotionEvent event) {
         velocityTracker.addMovement(event);
-//        System.out.println("event.getAction(): " + event.getAction());
-//        System.out.println("event.getRawX(): " + event.getRawX() + " event.getRawY(): " + event.getRawY());
         if(event.getAction() == MotionEvent.ACTION_DOWN){
             initialX = event.getRawX();
         }else if(event.getAction() == MotionEvent.ACTION_MOVE){
-//            System.out.println("setTranslationX: " + (event.getRawX() - initialX));
             view.setTranslationX(event.getRawX() - initialX);
         }else if(event.getAction() == MotionEvent.ACTION_UP){
             if(shouldRemove()){
@@ -67,38 +66,20 @@ public class MySwipeDismissTouchListener implements View.OnTouchListener {
         final float startTranslationX = view.getTranslationX();
         final float targetTranslationX = - view.getMeasuredWidth() - view.getLeft();
         ValueAnimator animator = ValueAnimator.ofFloat(0, 1);
-        //2.为目标对象的属性变化设置监听器
         animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
-                // TODO Auto-generated method stub
                 float animatorValue = (float) animation.getAnimatedValue();
-                //3.使用IntEvaluator计算属性值并赋值给ListView的高
                 view.setTranslationX(startTranslationX + (targetTranslationX - startTranslationX) * animatorValue);
                 view.setAlpha((1 - animatorValue) * (1 - animatorValue));
             }
         });
-        animator.setDuration(200);
+        animator.setDuration(ANIMATION_DURATION);
         animator.setInterpolator(new LinearInterpolator());
-        animator.addListener(new Animator.AnimatorListener() {
-            @Override
-            public void onAnimationStart(Animator animation) {
-
-            }
-
+        animator.addListener(new AnimatorListener() {
             @Override
             public void onAnimationEnd(Animator animation) {
                 shrinkView();
-            }
-
-            @Override
-            public void onAnimationCancel(Animator animation) {
-
-            }
-
-            @Override
-            public void onAnimationRepeat(Animator animation) {
-
             }
         });
         animator.start();
@@ -107,17 +88,14 @@ public class MySwipeDismissTouchListener implements View.OnTouchListener {
     private void resetView() {
         final float startTranslationX = view.getTranslationX();
         ValueAnimator animator = ValueAnimator.ofFloat(1, 0);
-        //2.为目标对象的属性变化设置监听器
         animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
-                // TODO Auto-generated method stub
                 float animatorValue = (float) animation.getAnimatedValue();
-                //3.使用IntEvaluator计算属性值并赋值给ListView的高
                 view.setTranslationX(startTranslationX * animatorValue);
             }
         });
-        animator.setDuration(200);
+        animator.setDuration(ANIMATION_DURATION);
         animator.setInterpolator(new AccelerateDecelerateInterpolator());
         animator.start();
     }
@@ -126,44 +104,41 @@ public class MySwipeDismissTouchListener implements View.OnTouchListener {
 
         final float initialHeight = view.getMeasuredHeight();
         ValueAnimator animator = ValueAnimator.ofFloat(1, 0);
-        //2.为目标对象的属性变化设置监听器
         animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
-                // TODO Auto-generated method stub
                 float animatorValue = (float) animation.getAnimatedValue();
-                //3.使用IntEvaluator计算属性值并赋值给ListView的高
                 view.getLayoutParams().height = (int) (initialHeight * animatorValue);
                 view.requestLayout();
             }
         });
-        //4.为ValueAnimator设置LinearInterpolator
         animator.setInterpolator(new LinearInterpolator());
-        //5.设置动画的持续时间
-        animator.setDuration(200);
-        //6.为ValueAnimator设置目标对象并开始执行动画
+        animator.setDuration(ANIMATION_DURATION);
         animator.setTarget(view);
-        animator.addListener(new Animator.AnimatorListener() {
-            @Override
-            public void onAnimationStart(Animator animation) {
-
-            }
-
+        animator.addListener(new AnimatorListener() {
             @Override
             public void onAnimationEnd(Animator animation) {
                 callback.onViewRemoved();
             }
 
-            @Override
-            public void onAnimationCancel(Animator animation) {
-
-            }
-
-            @Override
-            public void onAnimationRepeat(Animator animation) {
-
-            }
         });
         animator.start();
+    }
+
+    private abstract class AnimatorListener implements Animator.AnimatorListener {
+        @Override
+        public void onAnimationStart(Animator animation) {
+
+        }
+
+        @Override
+        public void onAnimationCancel(Animator animation) {
+
+        }
+
+        @Override
+        public void onAnimationRepeat(Animator animation) {
+
+        }
     }
 }
