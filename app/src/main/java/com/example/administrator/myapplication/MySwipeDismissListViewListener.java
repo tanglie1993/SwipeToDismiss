@@ -14,7 +14,7 @@ import android.widget.ListView;
  * Created by Administrator on 2017/4/12 0012.
  */
 
-public class MySwipeDismissListViewListener implements View.OnTouchListener {
+public class MySwipeDismissListViewListener extends BaseSwipeDismissListener {
 
     public interface ViewRemoveListener{
         void onViewRemoved(int position);
@@ -28,8 +28,6 @@ public class MySwipeDismissListViewListener implements View.OnTouchListener {
     private float initialY = 0;
 
     private VelocityTracker velocityTracker = VelocityTracker.obtain();
-
-    private final int ANIMATION_DURATION = 200;
 
     private View viewBeingDragged;
     private int positionBeingDragged;
@@ -67,7 +65,7 @@ public class MySwipeDismissListViewListener implements View.OnTouchListener {
                 if(shouldRemove()){
                     removeView();
                 }else{
-                    resetView();
+                    resetView(viewBeingDragged);
                 }
             }
         }
@@ -106,21 +104,6 @@ public class MySwipeDismissListViewListener implements View.OnTouchListener {
         animator.start();
     }
 
-    private void resetView() {
-        final float startTranslationX = viewBeingDragged.getTranslationX();
-        ValueAnimator animator = ValueAnimator.ofFloat(1, 0);
-        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                float animatorValue = (float) animation.getAnimatedValue();
-                viewBeingDragged.setTranslationX(startTranslationX * animatorValue);
-            }
-        });
-        animator.setDuration(ANIMATION_DURATION);
-        animator.setInterpolator(new AccelerateDecelerateInterpolator());
-        animator.start();
-    }
-
     private void shrinkView() {
 
         final float initialHeight = viewBeingDragged.getMeasuredHeight();
@@ -144,22 +127,5 @@ public class MySwipeDismissListViewListener implements View.OnTouchListener {
 
         });
         animator.start();
-    }
-
-    private abstract class AnimatorListener implements Animator.AnimatorListener {
-        @Override
-        public void onAnimationStart(Animator animation) {
-
-        }
-
-        @Override
-        public void onAnimationCancel(Animator animation) {
-
-        }
-
-        @Override
-        public void onAnimationRepeat(Animator animation) {
-
-        }
     }
 }

@@ -17,7 +17,7 @@ import android.view.animation.LinearInterpolator;
  * Created by Administrator on 2017/4/11 0011.
  */
 
-public class MySwipeDismissTouchListener implements View.OnTouchListener {
+public class MySwipeDismissTouchListener extends BaseSwipeDismissListener {
 
     public interface ViewRemoveListener{
         void onViewRemoved();
@@ -30,8 +30,6 @@ public class MySwipeDismissTouchListener implements View.OnTouchListener {
     private float initialX = 0;
 
     private VelocityTracker velocityTracker = VelocityTracker.obtain();
-
-    private final int ANIMATION_DURATION = 200;
 
     public MySwipeDismissTouchListener(final View view, ViewRemoveListener callback) {
         this.view = view;
@@ -54,7 +52,7 @@ public class MySwipeDismissTouchListener implements View.OnTouchListener {
             if(shouldRemove()){
                 removeView();
             }else{
-                resetView();
+                resetView(view);
             }
         }
 
@@ -93,20 +91,7 @@ public class MySwipeDismissTouchListener implements View.OnTouchListener {
         animator.start();
     }
 
-    private void resetView() {
-        final float startTranslationX = view.getTranslationX();
-        ValueAnimator animator = ValueAnimator.ofFloat(1, 0);
-        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                float animatorValue = (float) animation.getAnimatedValue();
-                view.setTranslationX(startTranslationX * animatorValue);
-            }
-        });
-        animator.setDuration(ANIMATION_DURATION);
-        animator.setInterpolator(new AccelerateDecelerateInterpolator());
-        animator.start();
-    }
+
 
     private void shrinkView() {
 
@@ -133,20 +118,4 @@ public class MySwipeDismissTouchListener implements View.OnTouchListener {
         animator.start();
     }
 
-    private abstract class AnimatorListener implements Animator.AnimatorListener {
-        @Override
-        public void onAnimationStart(Animator animation) {
-
-        }
-
-        @Override
-        public void onAnimationCancel(Animator animation) {
-
-        }
-
-        @Override
-        public void onAnimationRepeat(Animator animation) {
-
-        }
-    }
 }
