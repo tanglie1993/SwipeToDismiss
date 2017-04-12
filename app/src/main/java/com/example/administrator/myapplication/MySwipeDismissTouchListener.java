@@ -4,6 +4,7 @@ import android.animation.Animator;
 import android.animation.IntEvaluator;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
+import android.os.Handler;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
@@ -32,19 +33,23 @@ public class MySwipeDismissTouchListener implements View.OnTouchListener {
 
     private final int ANIMATION_DURATION = 200;
 
-    public MySwipeDismissTouchListener(View view, ViewRemoveListener callback) {
+    public MySwipeDismissTouchListener(final View view, ViewRemoveListener callback) {
         this.view = view;
         this.callback = callback;
     }
 
+
     @Override
     public boolean onTouch(View v, MotionEvent event) {
         velocityTracker.addMovement(event);
+        System.out.println("event.getAction(): " + event.getAction());
+        System.out.println("event.getRawX(): " + event.getRawX() + " event.getRawY(): " + event.getRawY());
         if(event.getAction() == MotionEvent.ACTION_DOWN){
             initialX = event.getRawX();
         }else if(event.getAction() == MotionEvent.ACTION_MOVE){
             view.setTranslationX(event.getRawX() - initialX);
-        }else if(event.getAction() == MotionEvent.ACTION_UP){
+        }else if(event.getAction() == MotionEvent.ACTION_UP
+                || event.getAction() == MotionEvent.ACTION_CANCEL){
             if(shouldRemove()){
                 removeView();
             }else{
@@ -59,6 +64,8 @@ public class MySwipeDismissTouchListener implements View.OnTouchListener {
         velocityTracker.computeCurrentVelocity(1000); //设置units的值为1000，意思为一秒时间内运动了多少个像素
         // 如果按照目前速度，1秒内view将从左侧滑出，则要删除
         float predictedTranslationX = velocityTracker.getXVelocity() + view.getTranslationX();
+        System.out.println("predictedTranslationX: " + predictedTranslationX);
+        System.out.println("view.getLeft() + view.getMeasuredWidth(): " + view.getLeft() + view.getMeasuredWidth());
         return - predictedTranslationX > view.getLeft() + view.getMeasuredWidth();
     }
 

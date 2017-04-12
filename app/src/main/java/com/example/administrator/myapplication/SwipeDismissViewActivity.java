@@ -14,7 +14,7 @@ public class SwipeDismissViewActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_swipe_dismiss_view);
 
-        String[] items = new String[10];
+        String[] items = new String[20];
         for (int i = 0; i < items.length; i++) {
             items[i] = "Item " + (i + 1);
         }
@@ -34,6 +34,15 @@ public class SwipeDismissViewActivity extends AppCompatActivity {
                             Toast.LENGTH_SHORT).show();
                 }
             });
+
+            dismissableButton.setOnTouchListener(new MySwipeDismissTouchListener(dismissableButton
+                    , new MySwipeDismissTouchListener.ViewRemoveListener() {
+                @Override
+                public void onViewRemoved() {
+                    dismissableContainer.removeView(dismissableButton);
+                }
+            }));
+
             // Create a generic swipe-to-dismiss touch listener.
 //            dismissableButton.setOnTouchListener(new SwipeDismissTouchListener(
 //                    dismissableButton,
@@ -50,13 +59,7 @@ public class SwipeDismissViewActivity extends AppCompatActivity {
 //                        }
 //                    }));
 
-            dismissableButton.setOnTouchListener(new MySwipeDismissTouchListener(dismissableButton
-                    , new MySwipeDismissTouchListener.ViewRemoveListener() {
-                @Override
-                public void onViewRemoved() {
-                    dismissableContainer.removeView(dismissableButton);
-                }
-            }));
+
 
 
             dismissableContainer.addView(dismissableButton);
