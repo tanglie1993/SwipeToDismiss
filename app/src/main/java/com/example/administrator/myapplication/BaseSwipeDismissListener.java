@@ -44,13 +44,12 @@ public abstract class BaseSwipeDismissListener implements View.OnTouchListener {
     protected void removeView(final View view) {
         final float startTranslationX = view.getTranslationX();
         final float targetTranslationX = - view.getMeasuredWidth() - view.getLeft();
-        ValueAnimator animator = ValueAnimator.ofFloat(0, 0.1f);
+        ValueAnimator animator = ValueAnimator.ofFloat(0, 1f);
         animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
                 float animatorValue = (float) animation.getAnimatedValue();
                 view.setTranslationX(startTranslationX + (targetTranslationX - startTranslationX) * animatorValue);
-                view.setAlpha((1 - animatorValue) * (1 - animatorValue));
             }
         });
         animator.setDuration(ANIMATION_DURATION);
@@ -68,7 +67,7 @@ public abstract class BaseSwipeDismissListener implements View.OnTouchListener {
 
     protected void shrinkView(final View view) {
         final float initialHeight = view.getMeasuredHeight();
-        ValueAnimator animator = ValueAnimator.ofFloat(1, 0.1f);
+        ValueAnimator animator = ValueAnimator.ofFloat(1, 0f);
         animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
