@@ -44,20 +44,20 @@ public class SwipeDismissViewActivity extends AppCompatActivity {
             }));
 
             // Create a generic swipe-to-dismiss touch listener.
-            dismissableButton.setOnTouchListener(new SwipeDismissTouchListener(
-                    dismissableButton,
-                    null,
-                    new SwipeDismissTouchListener.DismissCallbacks() {
-                        @Override
-                        public boolean canDismiss(Object token) {
-                            return true;
-                        }
-
-                        @Override
-                        public void onDismiss(View view, Object token) {
-                            dismissableContainer.removeView(dismissableButton);
-                        }
-                    }));
+//            dismissableButton.setOnTouchListener(new SwipeDismissTouchListener(
+//                    dismissableButton,
+//                    null,
+//                    new SwipeDismissTouchListener.DismissCallbacks() {
+//                        @Override
+//                        public boolean canDismiss(Object token) {
+//                            return true;
+//                        }
+//
+//                        @Override
+//                        public void onDismiss(View view, Object token) {
+//                            dismissableContainer.removeView(dismissableButton);
+//                        }
+//                    }));
 
 
 

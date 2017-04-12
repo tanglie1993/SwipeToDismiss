@@ -47,6 +47,7 @@ public class MySwipeDismissTouchListener implements View.OnTouchListener {
         if(event.getAction() == MotionEvent.ACTION_DOWN){
             initialX = event.getRawX();
         }else if(event.getAction() == MotionEvent.ACTION_MOVE){
+            view.getParent().requestDisallowInterceptTouchEvent(true);
             view.setTranslationX(event.getRawX() - initialX);
         }else if(event.getAction() == MotionEvent.ACTION_UP
                 || event.getAction() == MotionEvent.ACTION_CANCEL){
