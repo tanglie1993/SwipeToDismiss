@@ -1,13 +1,7 @@
 package com.example.administrator.myapplication;
 
-import android.animation.Animator;
-import android.animation.ValueAnimator;
 import android.view.MotionEvent;
-import android.view.VelocityTracker;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.animation.AccelerateDecelerateInterpolator;
-import android.view.animation.LinearInterpolator;
 import android.widget.ListView;
 
 /**
@@ -29,6 +23,7 @@ public class MySwipeDismissListViewListener extends BaseSwipeDismissListener {
     private float initialX = 0;
     private float initialY = 0;
 
+    private int viewBeingDraggedInitialHeight = 0;
     private View viewBeingDragged;
     private int positionBeingDragged;
 
@@ -49,6 +44,7 @@ public class MySwipeDismissListViewListener extends BaseSwipeDismissListener {
             for(int i = 0; i < listView.getChildCount(); i++){
                 View view = listView.getChildAt(i);
                 if(event.getY() > view.getTop() && event.getY() < view.getBottom()){
+                    viewBeingDraggedInitialHeight = view.getMeasuredHeight();
                     viewBeingDragged = view;
                     positionBeingDragged = i;
                     break;
@@ -64,6 +60,7 @@ public class MySwipeDismissListViewListener extends BaseSwipeDismissListener {
             if(viewBeingDragged != null){
                 if(shouldRemove(viewBeingDragged)){
                     removeView(viewBeingDragged);
+//                    onViewRemoved();
                 }else{
                     resetView(viewBeingDragged);
                 }
@@ -75,5 +72,12 @@ public class MySwipeDismissListViewListener extends BaseSwipeDismissListener {
     @Override
     protected void onViewRemoved() {
         callback.onViewRemoved(positionBeingDragged);
+        restoreViewState(viewBeingDragged);
+    }
+
+    private void restoreViewState(View view) {
+        view.setTranslationX(0);
+        view.getLayoutParams().height = viewBeingDraggedInitialHeight;
+        view.requestLayout();
     }
 }

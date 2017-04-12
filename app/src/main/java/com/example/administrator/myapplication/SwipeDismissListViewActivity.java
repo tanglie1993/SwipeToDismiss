@@ -19,7 +19,7 @@ public class SwipeDismissListViewActivity extends AppCompatActivity {
 
         String[] items = new String[20];
         for (int i = 0; i < items.length; i++) {
-            items[i] = "Item " + (i + 1);
+            items[i] = "Item111111111111111111111111 " + (i + 1);
         }
 
         mAdapter = new ArrayAdapter<String>(this,
