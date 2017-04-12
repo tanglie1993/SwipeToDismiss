@@ -65,8 +65,19 @@ public class MySwipeDismissTouchListener implements View.OnTouchListener {
     private void removeView() {
         final float startTranslationX = view.getTranslationX();
         final float targetTranslationX = - view.getMeasuredWidth() - view.getLeft();
-        ObjectAnimator animator = ObjectAnimator.ofFloat(view, "translationX", startTranslationX, targetTranslationX);
-        animator.setDuration(100);
+        ValueAnimator animator = ValueAnimator.ofFloat(0, 1);
+        //2.为目标对象的属性变化设置监听器
+        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                // TODO Auto-generated method stub
+                float animatorValue = (float) animation.getAnimatedValue();
+                //3.使用IntEvaluator计算属性值并赋值给ListView的高
+                view.setTranslationX(startTranslationX + (targetTranslationX - startTranslationX) * animatorValue);
+                view.setAlpha((1 - animatorValue) * (1 - animatorValue));
+            }
+        });
+        animator.setDuration(200);
         animator.setInterpolator(new LinearInterpolator());
         animator.addListener(new Animator.AnimatorListener() {
             @Override
@@ -110,7 +121,7 @@ public class MySwipeDismissTouchListener implements View.OnTouchListener {
         //4.为ValueAnimator设置LinearInterpolator
         animator.setInterpolator(new LinearInterpolator());
         //5.设置动画的持续时间
-        animator.setDuration(100);
+        animator.setDuration(200);
         //6.为ValueAnimator设置目标对象并开始执行动画
         animator.setTarget(view);
         animator.addListener(new Animator.AnimatorListener() {
