@@ -68,7 +68,7 @@ public abstract class BaseSwipeDismissListener implements View.OnTouchListener {
 
     protected void shrinkView(final View view) {
         final float initialHeight = view.getMeasuredHeight();
-        ValueAnimator animator = ValueAnimator.ofFloat(1, 0.8f);
+        ValueAnimator animator = ValueAnimator.ofFloat(1, 0.1f);
         animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
