@@ -16,6 +16,8 @@ import android.widget.ListView;
 
 public class MySwipeDismissListViewListener extends BaseSwipeDismissListener {
 
+
+
     public interface ViewRemoveListener{
         void onViewRemoved(int position);
     }
@@ -26,8 +28,6 @@ public class MySwipeDismissListViewListener extends BaseSwipeDismissListener {
 
     private float initialX = 0;
     private float initialY = 0;
-
-    private VelocityTracker velocityTracker = VelocityTracker.obtain();
 
     private View viewBeingDragged;
     private int positionBeingDragged;
@@ -62,8 +62,8 @@ public class MySwipeDismissListViewListener extends BaseSwipeDismissListener {
         }else if(event.getAction() == MotionEvent.ACTION_UP
                 || event.getAction() == MotionEvent.ACTION_CANCEL){
             if(viewBeingDragged != null){
-                if(shouldRemove()){
-                    removeView();
+                if(shouldRemove(viewBeingDragged)){
+                    removeView(viewBeingDragged);
                 }else{
                     resetView(viewBeingDragged);
                 }
@@ -72,60 +72,8 @@ public class MySwipeDismissListViewListener extends BaseSwipeDismissListener {
         return false;
     }
 
-    private boolean shouldRemove() {
-        velocityTracker.computeCurrentVelocity(1000); //设置units的值为1000，意思为一秒时间内运动了多少个像素
-        // 如果按照目前速度，1秒内view将从左侧滑出，则要删除
-        float predictedTranslationX = velocityTracker.getXVelocity() + viewBeingDragged.getTranslationX();
-        System.out.println("predictedTranslationX: " + predictedTranslationX);
-        System.out.println("view.getLeft() + view.getMeasuredWidth(): " + viewBeingDragged.getLeft() + viewBeingDragged.getMeasuredWidth());
-        return - predictedTranslationX > viewBeingDragged.getLeft() + viewBeingDragged.getMeasuredWidth();
-    }
-
-    private void removeView() {
-        final float startTranslationX = viewBeingDragged.getTranslationX();
-        final float targetTranslationX = - viewBeingDragged.getMeasuredWidth() - viewBeingDragged.getLeft();
-        ValueAnimator animator = ValueAnimator.ofFloat(0, 1);
-        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                float animatorValue = (float) animation.getAnimatedValue();
-                viewBeingDragged.setTranslationX(startTranslationX + (targetTranslationX - startTranslationX) * animatorValue);
-                viewBeingDragged.setAlpha((1 - animatorValue) * (1 - animatorValue));
-            }
-        });
-        animator.setDuration(ANIMATION_DURATION);
-        animator.setInterpolator(new LinearInterpolator());
-        animator.addListener(new AnimatorListener() {
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                shrinkView();
-            }
-        });
-        animator.start();
-    }
-
-    private void shrinkView() {
-
-        final float initialHeight = viewBeingDragged.getMeasuredHeight();
-        ValueAnimator animator = ValueAnimator.ofFloat(1, 0);
-        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                float animatorValue = (float) animation.getAnimatedValue();
-                viewBeingDragged.getLayoutParams().height = (int) (initialHeight * animatorValue);
-                viewBeingDragged.requestLayout();
-            }
-        });
-        animator.setInterpolator(new LinearInterpolator());
-        animator.setDuration(ANIMATION_DURATION);
-        animator.setTarget(viewBeingDragged);
-        animator.addListener(new AnimatorListener() {
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                callback.onViewRemoved(positionBeingDragged);
-            }
-
-        });
-        animator.start();
+    @Override
+    protected void onViewRemoved() {
+        callback.onViewRemoved(positionBeingDragged);
     }
 }
