@@ -9,6 +9,7 @@ import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.LinearInterpolator;
 
 /**
@@ -48,7 +49,7 @@ public class MySwipeDismissTouchListener implements View.OnTouchListener {
             if(shouldRemove()){
                 removeView();
             }else{
-                view.setTranslationX(0);
+                resetView();
             }
         }
 
@@ -100,6 +101,24 @@ public class MySwipeDismissTouchListener implements View.OnTouchListener {
 
             }
         });
+        animator.start();
+    }
+
+    private void resetView() {
+        final float startTranslationX = view.getTranslationX();
+        ValueAnimator animator = ValueAnimator.ofFloat(1, 0);
+        //2.为目标对象的属性变化设置监听器
+        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                // TODO Auto-generated method stub
+                float animatorValue = (float) animation.getAnimatedValue();
+                //3.使用IntEvaluator计算属性值并赋值给ListView的高
+                view.setTranslationX(startTranslationX * animatorValue);
+            }
+        });
+        animator.setDuration(200);
+        animator.setInterpolator(new AccelerateDecelerateInterpolator());
         animator.start();
     }
 
