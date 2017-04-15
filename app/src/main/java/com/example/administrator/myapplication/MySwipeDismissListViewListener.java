@@ -178,7 +178,15 @@ public class MySwipeDismissListViewListener extends BaseSwipeDismissListener {
             @Override
             public void onAnimationEnd(Animator animation) {
                 if(exitingView != null && !exitingView.animator.isPaused()){
-                    shrinkView(view, position);
+                    if(position == listView.getCount() - 1
+                            && firstVisibleItem == 0
+                            && lastVisibleItem == listView.getCount()){
+                        onViewRemoved(position);
+                        exitingView = null;
+                        lastVisibleItem--;
+                    }else{
+                        shrinkView(view, position);
+                    }
                 }
             }
         });

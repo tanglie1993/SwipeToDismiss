@@ -17,7 +17,7 @@ public class SwipeDismissListViewActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_swipe_dismiss_list_view);
 
-        String[] items = new String[20];
+        String[] items = new String[10];
         for (int i = 0; i < items.length; i++) {
             items[i] = "Item111111111111111111111111 " + (i + 1);
         }

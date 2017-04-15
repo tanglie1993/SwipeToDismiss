@@ -15,7 +15,7 @@ public abstract class BaseSwipeDismissListener implements View.OnTouchListener {
 
     protected VelocityTracker velocityTracker = VelocityTracker.obtain();
 
-    protected final int ANIMATION_DURATION = 1000;
+    protected final int ANIMATION_DURATION = 200;
 
     protected void resetView(final View view) {
         final float startTranslationX = view.getTranslationX();
