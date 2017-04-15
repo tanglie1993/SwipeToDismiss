@@ -33,28 +33,30 @@ public class MySwipeDismissListViewListener extends BaseSwipeDismissListener {
 
     private boolean isDeleting = false;
 
-    private Map<Integer, AnimatorElement> viewAnimationMap = new HashMap<>();
+    private AnimatorElement exitingView;
 
     private class AnimatorElement{
         static final int SWIPE = 1;
         static final int SHRINK = 2;
 
-        AnimatorElement(Animator animator, int itemInitialHeight, int targetTranslationX) {
+        AnimatorElement(Animator animator, int itemInitialHeight, int targetTranslationX, int position, View view) {
             this.animator = animator;
             this.itemInitialHeight = itemInitialHeight;
             this.targetTranslationX = targetTranslationX;
+            this.initialPosition = position;
+            this.view = view;
         }
 
         Animator animator;
+        final View view;
         int stage = SWIPE;
-        int itemInitialHeight;
-        int targetTranslationX;
+        final int itemInitialHeight;
+        final int targetTranslationX;
+        final int initialPosition;
     }
 
     private int firstVisibleItem = 0;
     private int lastVisibleItem = 0;
-    private View firstVisibleView;
-    private View lastVisibleView;
 
 
     public MySwipeDismissListViewListener(final ListView listView, ViewRemoveListener callback) {
@@ -67,69 +69,57 @@ public class MySwipeDismissListViewListener extends BaseSwipeDismissListener {
             }
 
             @Override
-            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-                if(firstVisibleView == null){
-                    firstVisibleView = listView.getChildAt(0);
+            public void onScroll(AbsListView view, int newFirstVisibleItem, int visibleItemCount, int totalItemCount) {
+                int newLastVisibleItem = newFirstVisibleItem + visibleItemCount - 1;
+                if(newLastVisibleItem >= totalItemCount){
+                    newLastVisibleItem = totalItemCount - 1;
                 }
-                int lastVisibleItem = firstVisibleItem + visibleItemCount - 1;
-                if(lastVisibleItem >= totalItemCount){
-                    lastVisibleItem = totalItemCount - 1;
-                }
-                if(lastVisibleView == null){
-                    lastVisibleView = listView.getChildAt(lastVisibleItem);
-                }
-                if(firstVisibleItem != MySwipeDismissListViewListener.this.firstVisibleItem){
-                    System.out.println("firstVisibleItem: " + firstVisibleItem);
-                    System.out.println("MySwipeDismissListViewListener.this.firstVisibleItem: "
-                            + MySwipeDismissListViewListener.this.firstVisibleItem);
+                if(exitingView == null){
+                    return;
                 }
 
-                if(firstVisibleItem != MySwipeDismissListViewListener.this.firstVisibleItem){
-                    tryPauseViewAnimation(MySwipeDismissListViewListener.this.firstVisibleItem);
-                    firstVisibleView = listView.getChildAt(firstVisibleItem);
-                    tryResumeAnimation(firstVisibleItem);
+                if(newFirstVisibleItem != MySwipeDismissListViewListener.this.firstVisibleItem){
+                    if(newFirstVisibleItem == exitingView.initialPosition){
+                        tryResumeAnimation();
+                    }else if(newFirstVisibleItem > exitingView.initialPosition){
+                        tryPauseAnimation();
+                    }
+
                 }
-                if(MySwipeDismissListViewListener.this.lastVisibleItem != lastVisibleItem){
-                    tryPauseViewAnimation(MySwipeDismissListViewListener.this.lastVisibleItem);
-                    lastVisibleView = listView.getChildAt(lastVisibleItem);
-                    tryResumeAnimation(lastVisibleItem);
+                if(MySwipeDismissListViewListener.this.lastVisibleItem != newLastVisibleItem){
+                    if(newLastVisibleItem == exitingView.initialPosition){
+                        tryResumeAnimation();
+                    }else if(newLastVisibleItem < exitingView.initialPosition){
+                        tryPauseAnimation();
+                    }
                 }
-                MySwipeDismissListViewListener.this.firstVisibleItem = firstVisibleItem;
-                MySwipeDismissListViewListener.this.lastVisibleItem = lastVisibleItem;
+                MySwipeDismissListViewListener.this.firstVisibleItem = newFirstVisibleItem;
+                MySwipeDismissListViewListener.this.lastVisibleItem = newLastVisibleItem;
             }
         });
     }
 
-    private void tryResumeAnimation(int position) {
-        if(viewAnimationMap.containsKey(position)){
-            AnimatorElement animatorElement = viewAnimationMap.get(position);
-            if(animatorElement.animator.isPaused()){
-                if(animatorElement.stage == AnimatorElement.SHRINK){
-                    listView.getChildAt(position).setTranslationX(animatorElement.targetTranslationX);
-                }
-                animatorElement.animator.resume();
-            }
+    private void tryPauseAnimation() {
+        if(exitingView == null){
+            return;
+        }
+        if(exitingView.animator != null && exitingView.animator.isRunning()){
+            exitingView.animator.pause();
+            exitingView.view.setTranslationX(0);
+            exitingView.view.getLayoutParams().height = exitingView.itemInitialHeight;
+            exitingView.view.requestLayout();
         }
     }
 
-    private void tryPauseViewAnimation(int position) {
-        if(viewAnimationMap.get(position) == null){
-            return;
-        }
-        Animator animator = viewAnimationMap.get(position).animator;
-        System.out.println("cancel 1");
-        if(animator != null){
-            System.out.println("cancel 2");
-            if(animator.isRunning()){
-                System.out.println("cancel 3");
-                animator.pause();
-                View child = listView.getChildAt(position);
-                child.setTranslationX(0);
-                child.getLayoutParams().height = viewAnimationMap.get(position).itemInitialHeight;
-                child.requestLayout();
+    private void tryResumeAnimation() {
+        if(exitingView != null){
+            if(exitingView.animator.isPaused()){
+                if(exitingView.stage == AnimatorElement.SHRINK){
+                    exitingView.view.setTranslationX(exitingView.targetTranslationX);
+                }
+                exitingView.animator.resume();
             }
         }
-        System.out.println("tryPauseViewAnimation viewAnimationMap.size(): " + viewAnimationMap.size());
     }
 
 
@@ -139,40 +129,39 @@ public class MySwipeDismissListViewListener extends BaseSwipeDismissListener {
         if(isDeleting){
             return false;
         }
-//        System.out.println("event.getAction(): " + event.getAction());
-//        System.out.println("event.getRawX(): " + event.getRawX() + " event.getRawY(): " + event.getRawY());
         if(event.getAction() == MotionEvent.ACTION_DOWN){
             initialX = event.getX();
             initialY = event.getY();
             for(int i = 0; i < listView.getChildCount(); i++){
                 View view = listView.getChildAt(i);
                 if(event.getY() > view.getTop() && event.getY() < view.getBottom()){
-                    positionBeingDragged = i;
+                    System.out.println("positionBeingDragged 0: " + (i + listView.getFirstVisiblePosition()));
+                    positionBeingDragged = i + listView.getFirstVisiblePosition();
                     break;
                 }
             }
         }else if(event.getAction() == MotionEvent.ACTION_MOVE){
             if(positionBeingDragged >= 0){
                 float deltaX = event.getX() - initialX;
-                listView.getChildAt(positionBeingDragged).setTranslationX(deltaX);
+                listView.getChildAt(positionBeingDragged - listView.getFirstVisiblePosition()).setTranslationX(deltaX);
             }
         }else if(event.getAction() == MotionEvent.ACTION_UP
                 || event.getAction() == MotionEvent.ACTION_CANCEL){
             if(positionBeingDragged >= 0){
-                if(shouldRemove(listView.getChildAt(positionBeingDragged))){
+                if(shouldRemove(listView.getChildAt(positionBeingDragged - listView.getFirstVisiblePosition()))){
                     isDeleting = true;
                     removeView(positionBeingDragged);
-//                    onViewRemoved();
                 }else{
-                    resetView(listView.getChildAt(positionBeingDragged));
+                    resetView(listView.getChildAt(positionBeingDragged - listView.getFirstVisiblePosition()));
                 }
             }
+            positionBeingDragged = -1;
         }
         return false;
     }
 
     protected void removeView(final int position) {
-        final View view = listView.getChildAt(position);
+        final View view = listView.getChildAt(positionBeingDragged - listView.getFirstVisiblePosition());
         final float startTranslationX = view.getTranslationX();
         final float targetTranslationX = - view.getMeasuredWidth() - view.getLeft();
         ValueAnimator animator = ValueAnimator.ofFloat(0, 1f);
@@ -188,14 +177,12 @@ public class MySwipeDismissListViewListener extends BaseSwipeDismissListener {
         animator.addListener(new AnimatorListener() {
             @Override
             public void onAnimationEnd(Animator animation) {
-                System.out.println("onAnimationEnd");
-                System.out.println("viewAnimationMap.size(): " + viewAnimationMap.size());
-                if(viewAnimationMap.containsKey(position)){
+                if(exitingView != null && !exitingView.animator.isPaused()){
                     shrinkView(view, position);
                 }
             }
         });
-        viewAnimationMap.put(position, new AnimatorElement(animator, view.getMeasuredHeight(), (int) targetTranslationX));
+        exitingView = new AnimatorElement(animator, view.getMeasuredHeight(), (int) targetTranslationX, position, view);
         animator.start();
     }
 
@@ -216,25 +203,25 @@ public class MySwipeDismissListViewListener extends BaseSwipeDismissListener {
         animator.addListener(new AnimatorListener() {
             @Override
             public void onAnimationEnd(Animator animation) {
-                viewAnimationMap.remove(position);
-                onViewRemoved(position, initialHeight);
+                onViewRemoved(position);
+                exitingView = null;
             }
 
         });
-        viewAnimationMap.get(position).animator = animator;
-        viewAnimationMap.get(position).stage = AnimatorElement.SHRINK;
+        exitingView.animator = animator;
+        exitingView.stage = AnimatorElement.SHRINK;
         animator.start();
     }
 
-    protected void onViewRemoved(int position, float initialHeight) {
-        restoreViewState(listView.getChildAt(position), (int) initialHeight);
+    protected void onViewRemoved(int position) {
+        restoreViewState();
         isDeleting = false;
         callback.onViewRemoved(position);
     }
 
-    private void restoreViewState(View view, int initialHeight) {
-        view.setTranslationX(0);
-        view.getLayoutParams().height = initialHeight;
-        view.requestLayout();
+    private void restoreViewState() {
+        exitingView.view.setTranslationX(0);
+        exitingView.view.getLayoutParams().height = exitingView.itemInitialHeight;
+        exitingView.view.requestLayout();
     }
 }

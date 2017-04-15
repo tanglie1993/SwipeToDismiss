@@ -35,6 +35,7 @@ public class SwipeDismissListViewActivity extends AppCompatActivity {
                         listView, new MySwipeDismissListViewListener.ViewRemoveListener() {
                     @Override
                     public void onViewRemoved(int position) {
+                        System.out.println("onViewRemoved: " + position);
                         mAdapter.remove(mAdapter.getItem(position));
                         mAdapter.notifyDataSetChanged();
                     }
