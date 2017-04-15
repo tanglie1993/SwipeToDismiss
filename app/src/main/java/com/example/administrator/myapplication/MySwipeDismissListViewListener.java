@@ -4,6 +4,7 @@ import android.animation.Animator;
 import android.animation.ValueAnimator;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.animation.Interpolator;
 import android.view.animation.LinearInterpolator;
 import android.widget.AbsListView;
 import android.widget.ListView;
@@ -32,7 +33,23 @@ public class MySwipeDismissListViewListener extends BaseSwipeDismissListener {
 
     private boolean isDeleting = false;
 
-    private Map<View, Animator> viewAnimationMap = new HashMap<>();
+    private Map<Integer, AnimatorElement> viewAnimationMap = new HashMap<>();
+
+    private class AnimatorElement{
+        static final int SWIPE = 1;
+        static final int SHRINK = 2;
+
+        AnimatorElement(Animator animator, int itemInitialHeight, int targetTranslationX) {
+            this.animator = animator;
+            this.itemInitialHeight = itemInitialHeight;
+            this.targetTranslationX = targetTranslationX;
+        }
+
+        Animator animator;
+        int stage = SWIPE;
+        int itemInitialHeight;
+        int targetTranslationX;
+    }
 
     private int firstVisibleItem = 0;
     private int lastVisibleItem = 0;
@@ -68,47 +85,51 @@ public class MySwipeDismissListViewListener extends BaseSwipeDismissListener {
                 }
 
                 if(firstVisibleItem != MySwipeDismissListViewListener.this.firstVisibleItem){
-                    cancelViewAnimation(firstVisibleView);
+                    tryPauseViewAnimation(MySwipeDismissListViewListener.this.firstVisibleItem);
                     firstVisibleView = listView.getChildAt(firstVisibleItem);
+                    tryResumeAnimation(firstVisibleItem);
                 }
                 if(MySwipeDismissListViewListener.this.lastVisibleItem != lastVisibleItem){
-                    cancelViewAnimation(lastVisibleView);
+                    tryPauseViewAnimation(MySwipeDismissListViewListener.this.lastVisibleItem);
                     lastVisibleView = listView.getChildAt(lastVisibleItem);
+                    tryResumeAnimation(lastVisibleItem);
                 }
                 MySwipeDismissListViewListener.this.firstVisibleItem = firstVisibleItem;
                 MySwipeDismissListViewListener.this.lastVisibleItem = lastVisibleItem;
             }
         });
-
-//
-//        new View.OnAttachStateChangeListener() {
-//            @Override
-//            public void onViewAttachedToWindow(View v) {
-//
-//            }
-//
-//            @Override
-//            public void onViewDetachedFromWindow(View v) {
-//                v.setTranslationX(0);
-//                if(viewAnimationMap.get(v) != null){
-//                    viewAnimationMap.get(v).cancel();
-//                }
-//            }
-//        }
     }
 
-    private void cancelViewAnimation(View view) {
-        Animator animator = viewAnimationMap.get(view);
+    private void tryResumeAnimation(int position) {
+        if(viewAnimationMap.containsKey(position)){
+            AnimatorElement animatorElement = viewAnimationMap.get(position);
+            if(animatorElement.animator.isPaused()){
+                if(animatorElement.stage == AnimatorElement.SHRINK){
+                    listView.getChildAt(position).setTranslationX(animatorElement.targetTranslationX);
+                }
+                animatorElement.animator.resume();
+            }
+        }
+    }
+
+    private void tryPauseViewAnimation(int position) {
+        if(viewAnimationMap.get(position) == null){
+            return;
+        }
+        Animator animator = viewAnimationMap.get(position).animator;
         System.out.println("cancel 1");
         if(animator != null){
-            viewAnimationMap.remove(view);
             System.out.println("cancel 2");
             if(animator.isRunning()){
                 System.out.println("cancel 3");
-                animator.cancel();
+                animator.pause();
+                View child = listView.getChildAt(position);
+                child.setTranslationX(0);
+                child.getLayoutParams().height = viewAnimationMap.get(position).itemInitialHeight;
+                child.requestLayout();
             }
         }
-        System.out.println("cancelViewAnimation viewAnimationMap.size(): " + viewAnimationMap.size());
+        System.out.println("tryPauseViewAnimation viewAnimationMap.size(): " + viewAnimationMap.size());
     }
 
 
@@ -164,33 +185,17 @@ public class MySwipeDismissListViewListener extends BaseSwipeDismissListener {
         });
         animator.setDuration(ANIMATION_DURATION);
         animator.setInterpolator(new LinearInterpolator());
-        animator.addListener(new Animator.AnimatorListener() {
-            @Override
-            public void onAnimationStart(Animator animation) {
-                System.out.println("onAnimationStart");
-            }
-
+        animator.addListener(new AnimatorListener() {
             @Override
             public void onAnimationEnd(Animator animation) {
                 System.out.println("onAnimationEnd");
                 System.out.println("viewAnimationMap.size(): " + viewAnimationMap.size());
-                if(viewAnimationMap.containsKey(view)){
-                    viewAnimationMap.remove(view);
+                if(viewAnimationMap.containsKey(position)){
                     shrinkView(view, position);
                 }
             }
-
-            @Override
-            public void onAnimationCancel(Animator animation) {
-
-            }
-
-            @Override
-            public void onAnimationRepeat(Animator animation) {
-
-            }
         });
-        viewAnimationMap.put(view, animator);
+        viewAnimationMap.put(position, new AnimatorElement(animator, view.getMeasuredHeight(), (int) targetTranslationX));
         animator.start();
     }
 
@@ -211,12 +216,13 @@ public class MySwipeDismissListViewListener extends BaseSwipeDismissListener {
         animator.addListener(new AnimatorListener() {
             @Override
             public void onAnimationEnd(Animator animation) {
-                viewAnimationMap.remove(view);
+                viewAnimationMap.remove(position);
                 onViewRemoved(position, initialHeight);
             }
 
         });
-        viewAnimationMap.put(view, animator);
+        viewAnimationMap.get(position).animator = animator;
+        viewAnimationMap.get(position).stage = AnimatorElement.SHRINK;
         animator.start();
     }
 
