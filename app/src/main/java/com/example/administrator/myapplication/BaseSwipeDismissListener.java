@@ -36,8 +36,8 @@ public abstract class BaseSwipeDismissListener implements View.OnTouchListener {
         velocityTracker.computeCurrentVelocity(1000); //设置units的值为1000，意思为一秒时间内运动了多少个像素
         // 如果按照目前速度，1秒内view将从左侧滑出，则要删除
         float predictedTranslationX = velocityTracker.getXVelocity() + view.getTranslationX();
-        System.out.println("predictedTranslationX: " + predictedTranslationX);
-        System.out.println("view.getLeft() + view.getMeasuredWidth(): " + view.getLeft() + view.getMeasuredWidth());
+//        System.out.println("predictedTranslationX: " + predictedTranslationX);
+//        System.out.println("view.getLeft() + view.getMeasuredWidth(): " + view.getLeft() + view.getMeasuredWidth());
         return - predictedTranslationX > view.getLeft() + view.getMeasuredWidth();
     }
 
