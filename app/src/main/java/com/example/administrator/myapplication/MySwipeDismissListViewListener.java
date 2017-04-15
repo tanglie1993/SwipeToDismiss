@@ -4,13 +4,9 @@ import android.animation.Animator;
 import android.animation.ValueAnimator;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.animation.Interpolator;
 import android.view.animation.LinearInterpolator;
 import android.widget.AbsListView;
 import android.widget.ListView;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Created by Administrator on 2017/4/12 0012.
@@ -27,7 +23,6 @@ public class MySwipeDismissListViewListener extends BaseSwipeDismissListener {
     private ViewRemoveListener callback;
 
     private float initialX = 0;
-    private float initialY = 0;
 
     private int positionBeingDragged = -1;
 
@@ -74,26 +69,26 @@ public class MySwipeDismissListViewListener extends BaseSwipeDismissListener {
                 if(newLastVisibleItem >= totalItemCount){
                     newLastVisibleItem = totalItemCount - 1;
                 }
-                System.out.println("newFirstVisibleItem: " + newFirstVisibleItem);
                 if(exitingView == null){
                     return;
                 }
-                if(newFirstVisibleItem != MySwipeDismissListViewListener.this.firstVisibleItem){
+                final int oldFirstVisibleItem = MySwipeDismissListViewListener.this.firstVisibleItem;
+                final int oldLastVisibleItem = MySwipeDismissListViewListener.this.lastVisibleItem;
+                if(newFirstVisibleItem != oldFirstVisibleItem){
                     if(newFirstVisibleItem == exitingView.initialPosition){
                         tryResumeAnimation();
                     }else if(newFirstVisibleItem < exitingView.initialPosition
-                            && MySwipeDismissListViewListener.this.firstVisibleItem > exitingView.initialPosition){
+                            && oldFirstVisibleItem > exitingView.initialPosition){
                         tryResumeAnimation();
                     }else if(newFirstVisibleItem > exitingView.initialPosition){
                         tryPauseAnimation();
                     }
-
                 }
-                if(MySwipeDismissListViewListener.this.lastVisibleItem != newLastVisibleItem){
+                if(oldLastVisibleItem != newLastVisibleItem){
                     if(newLastVisibleItem == exitingView.initialPosition){
                         tryResumeAnimation();
                     }else if(newLastVisibleItem > exitingView.initialPosition
-                            && MySwipeDismissListViewListener.this.lastVisibleItem < exitingView.initialPosition){
+                            && oldLastVisibleItem < exitingView.initialPosition){
                         tryResumeAnimation();
                     }else if(newLastVisibleItem < exitingView.initialPosition){
                         tryPauseAnimation();
@@ -137,7 +132,6 @@ public class MySwipeDismissListViewListener extends BaseSwipeDismissListener {
         }
         if(event.getAction() == MotionEvent.ACTION_DOWN){
             initialX = event.getX();
-            initialY = event.getY();
             for(int i = 0; i < listView.getChildCount(); i++){
                 View view = listView.getChildAt(i);
                 if(event.getY() > view.getTop() && event.getY() < view.getBottom()){
@@ -155,7 +149,6 @@ public class MySwipeDismissListViewListener extends BaseSwipeDismissListener {
             if(positionBeingDragged >= 0){
                 if(shouldRemove(listView.getChildAt(positionBeingDragged - listView.getFirstVisiblePosition()))){
                     isDeleting = true;
-                    System.out.println("removeView: " + positionBeingDragged);
                     removeView(positionBeingDragged);
                 }else{
                     resetView(listView.getChildAt(positionBeingDragged - listView.getFirstVisiblePosition()));
@@ -166,7 +159,7 @@ public class MySwipeDismissListViewListener extends BaseSwipeDismissListener {
         return false;
     }
 
-    protected void removeView(final int position) {
+    private void removeView(final int position) {
         final View view = listView.getChildAt(positionBeingDragged - listView.getFirstVisiblePosition());
         final float startTranslationX = view.getTranslationX();
         final float targetTranslationX = - view.getMeasuredWidth() - view.getLeft();
@@ -187,12 +180,10 @@ public class MySwipeDismissListViewListener extends BaseSwipeDismissListener {
                     if(position == listView.getCount() - 1
                             && firstVisibleItem == 0
                             && lastVisibleItem == listView.getCount()){
-                        System.out.println("onViewRemoved: " + position);
                         onViewRemoved(position);
                         exitingView = null;
                         lastVisibleItem--;
                     }else{
-                        System.out.println("shrinkView: " + position);
                         shrinkView(view, position);
                     }
                 }
@@ -202,7 +193,7 @@ public class MySwipeDismissListViewListener extends BaseSwipeDismissListener {
         animator.start();
     }
 
-    protected void shrinkView(final View view, final int position) {
+    private void shrinkView(final View view, final int position) {
         final float initialHeight = view.getMeasuredHeight();
         ValueAnimator animator = ValueAnimator.ofFloat(1, 0f);
         animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
@@ -219,7 +210,6 @@ public class MySwipeDismissListViewListener extends BaseSwipeDismissListener {
         animator.addListener(new AnimatorListener() {
             @Override
             public void onAnimationEnd(Animator animation) {
-                System.out.println("onViewRemoved: " + position);
                 onViewRemoved(position);
                 exitingView = null;
             }
@@ -230,15 +220,11 @@ public class MySwipeDismissListViewListener extends BaseSwipeDismissListener {
         animator.start();
     }
 
-    protected void onViewRemoved(int position) {
-        restoreViewState();
-        isDeleting = false;
-        callback.onViewRemoved(position);
-    }
-
-    private void restoreViewState() {
+    private void onViewRemoved(int position) {
         exitingView.view.setTranslationX(0);
         exitingView.view.getLayoutParams().height = exitingView.itemInitialHeight;
         exitingView.view.requestLayout();
+        isDeleting = false;
+        callback.onViewRemoved(position);
     }
 }
