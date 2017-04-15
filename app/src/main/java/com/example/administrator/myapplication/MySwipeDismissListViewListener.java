@@ -16,8 +16,6 @@ import java.util.List;
 
 public class MySwipeDismissListViewListener extends BaseSwipeDismissListener {
 
-
-
     public interface ViewRemoveListener{
         void onViewRemoved(int position);
     }
@@ -31,6 +29,8 @@ public class MySwipeDismissListViewListener extends BaseSwipeDismissListener {
 
     private int positionBeingDragged = -1;
 
+    private boolean isDeleting = false;
+
     public MySwipeDismissListViewListener(ListView listView, ViewRemoveListener callback) {
         this.listView = listView;
         this.callback = callback;
@@ -40,6 +40,9 @@ public class MySwipeDismissListViewListener extends BaseSwipeDismissListener {
     @Override
     public boolean onTouch(View v, MotionEvent event) {
         velocityTracker.addMovement(event);
+        if(isDeleting){
+            return false;
+        }
         System.out.println("event.getAction(): " + event.getAction());
         System.out.println("event.getRawX(): " + event.getRawX() + " event.getRawY(): " + event.getRawY());
         if(event.getAction() == MotionEvent.ACTION_DOWN){
@@ -61,6 +64,7 @@ public class MySwipeDismissListViewListener extends BaseSwipeDismissListener {
                 || event.getAction() == MotionEvent.ACTION_CANCEL){
             if(positionBeingDragged >= 0){
                 if(shouldRemove(listView.getChildAt(positionBeingDragged))){
+                    isDeleting = true;
                     removeView(listView.getChildAt(positionBeingDragged), positionBeingDragged);
 //                    onViewRemoved();
                 }else{
@@ -119,6 +123,7 @@ public class MySwipeDismissListViewListener extends BaseSwipeDismissListener {
 
     protected void onViewRemoved(int position, float initialHeight) {
         restoreViewState(listView.getChildAt(position), (int) initialHeight);
+        isDeleting = false;
         callback.onViewRemoved(position);
     }
 
